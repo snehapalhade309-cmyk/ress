@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResQAI — Emergency Management & Response System</title>
+  
+  <!-- Vendor CSS: Local fallback + CDN -->
+  <link rel="stylesheet" href="/vendor/leaflet.css">
+  
+  <!-- Application CSS -->
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/map.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300e5ff'><path d='M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 10h2v4h-2zm0 6h2v2h-2z'/></svg>">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header Bar -->
+    <header class="top-header">
+      <div class="brand-section">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>RESQ<span>AI</span> <span class="brand-badge">DECISION SUPPORT</span></h1>
+          <div class="brand-subtitle">Emergency Management & Climate Response System</div>
+        </div>
+      </div>
+
+      <div class="header-ticker">
+        <div class="ticker-pulse"></div>
+        <div class="ticker-text" id="live-ticker">COMMAND NET ONLINE: Real-time environmental hazard monitoring active.</div>
+      </div>
+
+      <div class="header-actions">
+        <div class="weather-pill" id="header-weather">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+          </svg>
+          <span class="temp" id="weather-temp">--°C</span>
+          <span class="cond" id="weather-cond">Loading...</span>
+        </div>
+
+        <div class="clock-display">
+          <div class="clock-time" id="clock-time">00:00:00 UTC</div>
+          <div class="clock-date" id="clock-date">2026-10-18</div>
+        </div>
+
+        <button class="alert-bell-btn" id="btn-header-alerts" title="Active Alerts">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+          </svg>
+          <span class="alert-badge-count" id="header-alert-count">0</span>
+        </button>
+
+        <button class="btn-report-quick" id="btn-quick-report">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Report Emergency
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <div class="main-wrapper">
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <div class="sidebar-nav">
+          <div class="nav-group-title">Tactical Operations</div>
+          <ul class="nav-links">
+            <li>
+              <a class="nav-link active" data-tab="tab-overview">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect width="7" height="9" x="3" y="3" rx="1"/>
+                  <rect width="7" height="5" x="14" y="3" rx="1"/>
+                  <rect width="7" height="9" x="14" y="12" rx="1"/>
+                  <rect width="7" height="5" x="3" y="16" rx="1"/>
+                </svg>
+                <span>Command Center</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-tab="tab-map">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+                  <line x1="9" x2="9" y1="3" y2="18"/>
+                  <line x1="15" x2="15" y1="6" y2="21"/>
+                </svg>
+                <span>Live Map</span>
+                <span class="badge-nav" id="nav-badge-map">5</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-tab="tab-report">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                <span>Report Emergency</span>
+              </a>
+            </li>
+          </ul>
+
+          <div class="nav-group-title">Intelligence & Resources</div>
+          <ul class="nav-links">
+            <li>
+              <a class="nav-link" data-tab="tab-risk">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span>AI Risk Intelligence</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-tab="tab-dispatch">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect width="16" height="12" x="2" y="6" rx="2"/>
+                  <circle cx="12" cy="12" r="2"/>
+                  <path d="M6 12h.01M18 12h.01"/>
+                </svg>
+                <span>Smart Dispatch</span>
+                <span class="badge-nav" id="nav-badge-dispatch">10</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-tab="tab-shelters">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span>Shelters & Routes</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-tab="tab-alerts">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <span>Alert Center</span>
+                <span class="badge-nav" id="nav-badge-alerts">3</span>
+              </a>
+            </li>
+          </ul>
+
+          <div class="nav-group-title">Analytics & Governance</div>
+          <ul class="nav-links">
+            <li>
+              <a class="nav-link" data-tab="tab-analytics">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="20" x2="18" y2="10"/>
+                  <line x1="12" y1="20" x2="12" y2="4"/>
+                  <line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+                <span>Analytics & Trends</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-tab="tab-health">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+                <span>System Health</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-link" data-tab="tab-about">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 16v-4"/>
+                  <path d="M12 8h.01"/>
+                </svg>
+                <span>About & Protocol</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="system-pill">
+            <div class="system-status-dot"></div>
+            <span>SQLite Local-First DB</span>
+          </div>
+          <div class="system-pill">
+            <div class="system-status-dot"></div>
+            <span>Open-Meteo & OSM Active</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Content Views -->
+      <main class="content-area">
+        
+        <!-- 1. Command Center / Overview Tab -->
+        <section class="tab-pane active" id="tab-overview">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">Executive <span>Command Center</span></h2>
+              <p class="page-desc">Real-time emergency monitoring, priority triage, and fleet resource status.</p>
+            </div>
+            <div class="header-toolbar">
+              <button class="btn btn-secondary btn-sm" id="btn-refresh-overview">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                Refresh Data
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Grid -->
+          <div class="kpi-grid">
+            <div class="kpi-card kpi-critical">
+              <div class="kpi-content">
+                <span class="kpi-label">Active Emergencies</span>
+                <span class="kpi-value" id="kpi-active-incidents">0</span>
+                <span class="kpi-sub" id="kpi-critical-sub">0 Critical Tier</span>
+              </div>
+              <div class="kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-cyan">
+              <div class="kpi-content">
+                <span class="kpi-label">Available Fleet</span>
+                <span class="kpi-value" id="kpi-avail-resources">0</span>
+                <span class="kpi-sub" id="kpi-fleet-sub">10 Total Units</span>
+              </div>
+              <div class="kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-green">
+              <div class="kpi-content">
+                <span class="kpi-label">Shelter Capacity</span>
+                <span class="kpi-value" id="kpi-shelter-pct">0%</span>
+                <span class="kpi-sub" id="kpi-shelter-sub">0 / 4,350 Occupied</span>
+              </div>
+              <div class="kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-high">
+              <div class="kpi-content">
+                <span class="kpi-label">Climate Threat Index</span>
+                <span class="kpi-value" id="kpi-weather-threat">ELEVATED</span>
+                <span class="kpi-sub" id="kpi-weather-sub">Monsoon Rain Band Active</span>
+              </div>
+              <div class="kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- High Priority Incidents Table -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/></svg>
+                Priority Incident Queue (Sorted by Heuristic Risk)
+              </h3>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-primary btn-sm" id="btn-goto-report">
+                  + New Incident
+                </button>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="table-overview-incidents">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Type</th>
+                    <th>Incident Title & Location</th>
+                    <th>Risk Score</th>
+                    <th>Affected</th>
+                    <th>Vulnerabilities</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="overview-incidents-body">
+                  <tr><td colspan="8" style="text-align:center; padding: 2rem;">Loading live incidents...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Recent Audit Trail + Fleet Status -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                  Operational Audit Trail
+                </h3>
+              </div>
+              <div class="card-body" style="padding: 0.75rem 1.25rem;">
+                <div id="audit-feed-list" style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 240px; overflow-y: auto;">
+                  <div style="color: var(--text-dim); font-size: 0.78rem;">Loading audit records...</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                  Emergency Fleet Readiness
+                </h3>
+              </div>
+              <div class="card-body" style="padding: 0.75rem 1.25rem;">
+                <div id="quick-fleet-list" style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 240px; overflow-y: auto;">
+                  <div style="color: var(--text-dim); font-size: 0.78rem;">Loading fleet status...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Live Map Tab -->
+        <section class="tab-pane" id="tab-map">
+          <div class="map-page-wrapper">
+            <!-- Search Overlay -->
+            <div class="map-top-bar">
+              <div class="map-search-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" class="map-search-input" id="map-search-input" placeholder="Search locality or landmark (e.g. Pune, Baner)...">
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-map-locate" title="Center to My Geolocation">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                Locate Me
+              </button>
+            </div>
+
+            <!-- Layer Controls Overlay -->
+            <div class="map-layer-controls">
+              <label><input type="checkbox" id="layer-incidents" checked> Incidents Layer</label>
+              <label><input type="checkbox" id="layer-resources" checked> Rescue Fleet Units</label>
+              <label><input type="checkbox" id="layer-shelters" checked> Evacuation Shelters</label>
+              <label><input type="checkbox" id="layer-weather"> Weather Threat Overlay</label>
+            </div>
+
+            <!-- Legend Overlay -->
+            <div class="map-legend">
+              <div class="legend-title">Tactical Map Legend</div>
+              <div class="legend-item"><div class="legend-icon-dot" style="background:var(--sev-critical);"></div> Critical Incident (80-100)</div>
+              <div class="legend-item"><div class="legend-icon-dot" style="background:var(--sev-high);"></div> High Incident (55-79)</div>
+              <div class="legend-item"><div class="legend-icon-dot" style="background:var(--sev-medium);"></div> Medium Incident (30-54)</div>
+              <div class="legend-item"><div class="legend-icon-dot" style="background:#0284c7;"></div> Available Fleet Unit</div>
+              <div class="legend-item"><div class="legend-icon-dot" style="background:var(--sev-high);"></div> Dispatched Unit</div>
+              <div class="legend-item"><div class="legend-icon-dot" style="background:#10b981;"></div> Evacuation Shelter</div>
+            </div>
+
+            <!-- Actual Leaflet Container -->
+            <div id="leaflet-map"></div>
+          </div>
+        </section>
+
+        <!-- 3. Report Emergency Tab -->
+        <section class="tab-pane" id="tab-report">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">Report <span>Emergency Incident</span></h2>
+              <p class="page-desc">Rapid on-scene situational report with instant real-time risk intelligence feedback.</p>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+            <!-- Report Form Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Incident Details & Vulnerability Assessment</h3>
+              </div>
+              <div class="card-body">
+                <form id="form-report-incident">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Incident Hazard Type <span class="required">*</span></label>
+                      <select class="form-control" id="rep-type" required>
+                        <option value="flood">Flood / Flash Inundation</option>
+                        <option value="landslide">Landslide / Mudslide</option>
+                        <option value="fire">Fire / Industrial Blaze</option>
+                        <option value="accident">Accident / Vehicle Pileup</option>
+                        <option value="severe_weather">Severe Weather / Storm Gale</option>
+                        <option value="earthquake">Earthquake / Structural Damage</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Reported Urgency / Severity <span class="required">*</span></label>
+                      <select class="form-control" id="rep-severity" required>
+                        <option value="minor">Minor (Localized, No Trapped Persons)</option>
+                        <option value="moderate" selected>Moderate (Infrastructure Hindered)</option>
+                        <option value="severe">Severe (Life Safety Threatened)</option>
+                        <option value="catastrophic">Catastrophic (Multiple Casualties / Mass Trapped)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Incident Title / Brief Headline <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="rep-title" placeholder="e.g. Flash flooding along residential canal bank" required>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Specific Location Description <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="rep-location" placeholder="e.g. Near Old Sangvi Bridge, Pune" required>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Latitude Coordinate</label>
+                      <input type="number" step="any" class="form-control" id="rep-lat" placeholder="e.g. 18.5204">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Longitude Coordinate</label>
+                      <input type="number" step="any" class="form-control" id="rep-lon" placeholder="e.g. 73.8567">
+                    </div>
+                  </div>
+                  <div style="margin-top:-0.5rem; margin-bottom: 1rem;">
+                    <button type="button" class="btn btn-secondary btn-sm" id="btn-pick-coords">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                      Use My Browser GPS Coordinates
+                    </button>
+                    <span style="font-size: 0.72rem; color: var(--text-dim); margin-left: 0.5rem;">Or click anywhere on the Live Map tab to set coordinates.</span>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Estimated Affected Population (People)</label>
+                    <input type="number" min="0" class="form-control" id="rep-people" value="10">
+                  </div>
+
+                  <!-- Vulnerability Tags -->
+                  <div class="form-group">
+                    <label class="form-label">Voluntarily Reported Vulnerability Needs</label>
+                    <div class="vuln-tags-container">
+                      <div class="vuln-tag-btn" data-tag="trapped">
+                        <input type="checkbox" style="display:none;" value="trapped"> Trapped / Waterbound (+15)
+                      </div>
+                      <div class="vuln-tag-btn" data-tag="medical_equipment">
+                        <input type="checkbox" style="display:none;" value="medical_equipment"> Oxygen / Medical Life-Support (+12)
+                      </div>
+                      <div class="vuln-tag-btn" data-tag="mobility_impaired">
+                        <input type="checkbox" style="display:none;" value="mobility_impaired"> Mobility Impaired (+9)
+                      </div>
+                      <div class="vuln-tag-btn" data-tag="elderly">
+                        <input type="checkbox" style="display:none;" value="elderly"> Elderly Citizens (+7)
+                      </div>
+                      <div class="vuln-tag-btn" data-tag="children">
+                        <input type="checkbox" style="display:none;" value="children"> Infants & Children (+6)
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Situational Notes / Additional Hazards</label>
+                    <textarea class="form-control" id="rep-description" rows="3" placeholder="Access road impassable due to fallen tree, flood waters rising rapidly..."></textarea>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Reporter Name (Optional)</label>
+                      <input type="text" class="form-control" id="rep-reporter-name" placeholder="Civil Defense Volunteer">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Contact Phone / Radio Call (Optional)</label>
+                      <input type="text" class="form-control" id="rep-reporter-contact" placeholder="+91-...">
+                    </div>
+                  </div>
+
+                  <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="reset" class="btn btn-secondary">Reset Form</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-report">Submit Incident to Command Net</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Live Risk Calculation Preview Sidepanel -->
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Live Risk Scoring Preview</h3>
+                </div>
+                <div class="card-body">
+                  <div class="risk-meter-box">
+                    <div class="risk-meter-score" id="preview-risk-score" style="color: var(--sev-medium);">52.0</div>
+                    <div id="preview-risk-badge" class="badge badge-medium" style="margin-top: 0.3rem;">MEDIUM RISK</div>
+                    <div class="risk-meter-bar">
+                      <div class="risk-meter-fill" id="preview-risk-bar" style="width: 52%; background: var(--sev-medium);"></div>
+                    </div>
+                    <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.5rem;">
+                      Engine: ResQAI Deterministic Heuristic Model v2.1
+                    </div>
+                  </div>
+
+                  <div style="margin-top: 1rem;">
+                    <div class="form-label" style="font-size: 0.72rem;">Calculated Factors:</div>
+                    <div id="preview-factor-list" style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.78rem;">
+                      <!-- Dynamic factors populated via JS -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Weather Context Card -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Local Climate Telemetry</h3>
+                </div>
+                <div class="card-body" id="preview-weather-box" style="font-size: 0.82rem;">
+                  <div style="color: var(--text-muted);">Enter valid coordinates to link real-time Open-Meteo precipitation and wind vectors.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. AI Risk Intelligence Tab -->
+        <section class="tab-pane" id="tab-risk">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">AI Risk <span>Intelligence Engine</span></h2>
+              <p class="page-desc">Deterministic multi-factor risk assessment formula, factor weightings, and model transparency.</p>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Mathematical Formulation & Weights</h3>
+              </div>
+              <div class="card-body" style="font-size: 0.85rem; line-height: 1.6;">
+                <p style="color: var(--text-muted); margin-bottom: 0.75rem;">
+                  ResQAI calculates a continuous risk score \(R \in [5, 100]\) to rank emergencies transparently:
+                </p>
+                <div style="background: var(--bg-surface); padding: 0.75rem 1rem; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-cyan); margin-bottom: 1rem;">
+                  R = Base(Hazard) + Sev + Pop(Civilian) + Vuln(Needs) + Env(Weather)
+                </div>
+                <ul style="color: var(--text-muted); padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                  <li><strong>Hazard Base:</strong> Flood (35), Landslide (40), Fire (35), Earthquake (45), Severe Weather (25).</li>
+                  <li><strong>Reported Severity:</strong> Minor (+5), Moderate (+15), Severe (+28), Catastrophic (+40).</li>
+                  <li><strong>Population Scale:</strong> 0 people (+2), 1-5 (+8), 6-20 (+16), 21-50 (+24), 50+ (+30).</li>
+                  <li><strong>Vulnerability Multiplier:</strong> Trapped (+15), Medical Oxygen (+12), Mobility (+9), Elderly (+7), Children (+6). Capped at +25 pts.</li>
+                  <li><strong>Weather Amplifier:</strong> Heavy Rain \(\ge 15\text{mm/hr}\) (+10-15 pts for flood/mudslide), Gale Wind \(\ge 40\text{km/h}\) (+14 pts for fire spread).</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Risk Tier Thresholds</h3>
+              </div>
+              <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                  <div style="border-left: 4px solid var(--sev-critical); padding: 0.5rem 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-sm);">
+                    <div style="font-weight: 700; color: var(--sev-critical);">CRITICAL TIER (Score 78.0 – 100.0)</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Immediate life-safety peril, rapid water inundation, mass trapped populations. Auto-generates critical alerts.</div>
+                  </div>
+                  <div style="border-left: 4px solid var(--sev-high); padding: 0.5rem 0.75rem; background: rgba(249, 115, 22, 0.1); border-radius: var(--radius-sm);">
+                    <div style="font-weight: 700; color: var(--sev-high);">HIGH TIER (Score 55.0 – 77.9)</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Major property loss, arterial road cutoffs, vulnerable cluster present. Priority resource dispatch recommended.</div>
+                  </div>
+                  <div style="border-left: 4px solid var(--sev-medium); padding: 0.5rem 0.75rem; background: rgba(234, 179, 8, 0.1); border-radius: var(--radius-sm);">
+                    <div style="font-weight: 700; color: var(--sev-medium);">MEDIUM TIER (Score 30.0 – 54.9)</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Moderate disruptions, isolated flooding, localized collisions. Standard queue routing.</div>
+                  </div>
+                  <div style="border-left: 4px solid var(--sev-low); padding: 0.5rem 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-sm);">
+                    <div style="font-weight: 700; color: var(--sev-low);">LOW TIER (Score 5.0 – 29.9)</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Minor hazards, advisory notices, standby surveillance without immediate life danger.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. Smart Dispatch Tab -->
+        <section class="tab-pane" id="tab-dispatch">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">Smart <span>Resource Dispatch</span></h2>
+              <p class="page-desc">Simulated emergency response fleet management, suitability matching, and collision-free assignment.</p>
+            </div>
+            <div class="header-toolbar">
+              <span class="badge badge-info">Simulated Decision Support Fleet</span>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+              <h3 class="card-title">Response Fleet Units Matrix</h3>
+              <div style="display:flex; gap:0.5rem;">
+                <select class="form-control" id="filter-fleet-status" style="width: 140px; padding: 0.3rem 0.5rem;">
+                  <option value="all">All Statuses</option>
+                  <option value="available">Available Only</option>
+                  <option value="dispatched">Dispatched</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="table-fleet">
+                <thead>
+                  <tr>
+                    <th>Unit Code</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Capabilities</th>
+                    <th>Base Station</th>
+                    <th>Status</th>
+                    <th>Assigned Incident</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="fleet-table-body">
+                  <tr><td colspan="8" style="text-align:center; padding: 2rem;">Loading emergency fleet units...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. Shelters & Evacuation Routes Tab -->
+        <section class="tab-pane" id="tab-shelters">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">Evacuation <span>Shelters & Routes</span></h2>
+              <p class="page-desc">Verified high-ground evacuation centers, live occupancy monitoring, and advisory routing calculation.</p>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Verified Evacuation Shelters</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table" id="table-shelters">
+                  <thead>
+                    <tr>
+                      <th>Code</th>
+                      <th>Facility Name</th>
+                      <th>Type</th>
+                      <th>Capacity</th>
+                      <th>Occupancy</th>
+                      <th>Amenities</th>
+                      <th>Route</th>
+                    </tr>
+                  </thead>
+                  <tbody id="shelters-table-body">
+                    <tr><td colspan="7" style="text-align:center; padding: 2rem;">Loading evacuation shelters...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Route Calculator Side Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Advisory Evacuation Router</h3>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">Select Source Incident</label>
+                  <select class="form-control" id="route-src-incident"></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Select Target Shelter</label>
+                  <select class="form-control" id="route-dest-shelter"></select>
+                </div>
+                <button class="btn btn-primary" id="btn-calc-route" style="width: 100%;">
+                  Calculate Evacuation Route
+                </button>
+
+                <div id="route-calc-result" style="margin-top: 1rem; display: none;">
+                  <div style="background: var(--bg-surface); border-radius: var(--radius-md); padding: 0.85rem; border: 1px solid var(--border-subtle);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+                      <span style="font-weight: 700; color: #fff;">Distance:</span>
+                      <span id="route-dist-val" style="color: var(--accent-cyan); font-weight: 700;">-- km</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+                      <span style="font-weight: 700; color: #fff;">Estimated Transit:</span>
+                      <span id="route-dur-val" style="color: var(--accent-cyan); font-weight: 700;">-- mins</span>
+                    </div>
+                    <div style="font-size: 0.72rem; color: var(--sev-high); margin-top: 0.5rem; border-top: 1px solid var(--border-subtle); padding-top: 0.4rem;">
+                      ⚠️ Advisory route. Road passability and depth must be confirmed on-scene.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. Alert Center Tab -->
+        <section class="tab-pane" id="tab-alerts">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">Emergency <span>Alert Center</span></h2>
+              <p class="page-desc">In-app situational broadcasts, meteorological warnings, and regional language templates.</p>
+            </div>
+            <div class="header-toolbar">
+              <button class="btn btn-secondary btn-sm" id="btn-toggle-unack">Show Unacknowledged Only</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Live Alert Stream</h3>
+            </div>
+            <div class="card-body" id="alerts-container">
+              <div style="color: var(--text-dim); text-align: center; padding: 2rem;">Loading emergency alerts...</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8. Analytics & Trends Tab -->
+        <section class="tab-pane" id="tab-analytics">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">Incident Analytics & <span>Response Metrics</span></h2>
+              <p class="page-desc">Derived charts based on live SQLite database records.</p>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Incidents by Disaster Hazard Type</h3></div>
+              <div class="card-body"><canvas id="chart-incident-types" height="220"></canvas></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Risk Category Breakdown</h3></div>
+              <div class="card-body"><canvas id="chart-risk-tiers" height="220"></canvas></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Operational Status Distribution</h3></div>
+              <div class="card-body"><canvas id="chart-status-funnel" height="220"></canvas></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Response Fleet Utilization</h3></div>
+              <div class="card-body"><canvas id="chart-fleet-usage" height="220"></canvas></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 9. System Health Tab -->
+        <section class="tab-pane" id="tab-health">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">System Health & <span>Integration Registry</span></h2>
+              <p class="page-desc">Honest, verifiable status telemetry for database and external no-mandatory-key public services.</p>
+            </div>
+            <div class="header-toolbar">
+              <button class="btn btn-secondary btn-sm" id="btn-refresh-health">Run Diagnostic Probe</button>
+              <button class="btn btn-danger btn-sm" id="btn-reset-demo">Reset Demo Database</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h3 class="card-title">Service Integrations Inventory</h3></div>
+            <div class="table-responsive">
+              <table class="data-table" id="table-health">
+                <thead>
+                  <tr>
+                    <th>Integration / Subsystem</th>
+                    <th>Status</th>
+                    <th>Latency</th>
+                    <th>Endpoint</th>
+                    <th>Auth Required</th>
+                    <th>Rate Limit Policy</th>
+                    <th>Attribution</th>
+                  </tr>
+                </thead>
+                <tbody id="health-table-body">
+                  <tr><td colspan="7" style="text-align:center; padding: 2rem;">Probing system integrations...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 10. About & Protocol Tab -->
+        <section class="tab-pane" id="tab-about">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">About <span>ResQAI</span></h2>
+              <p class="page-desc">Mission architecture, heuristic risk model, API strategy, and system disclosures.</p>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header"><h3 class="card-title">System Mission & Capabilities</h3></div>
+            <div class="card-body" style="font-size: 0.88rem; line-height: 1.7; color: var(--text-muted);">
+              <p style="margin-bottom: 0.75rem;">
+                <strong>ResQAI</strong> is an intelligent emergency management and climate response decision-support system built for localized disaster triage, rapid situational awareness, and resource dispatch coordination.
+              </p>
+              <p style="margin-bottom: 0.75rem;">
+                Designed with a local-first architecture, ResQAI operates without mandatory API keys, using public OpenStreetMap tiles, Open-Meteo meteorological telemetry, Nominatim public geocoding, and OSRM routing with offline geodesic fallbacks.
+              </p>
+              <h4 style="color: #fff; margin: 1.25rem 0 0.5rem;">Core Operational Disclosures:</h4>
+              <ul style="padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                <li><strong>Decision-Support Heuristic:</strong> The AI Risk Engine uses a deterministic, transparent multi-factor scoring model. It does not replace official command decisions.</li>
+                <li><strong>Simulated Fleet Units:</strong> Response units (ambulances, boats, fire trucks) are simulated for operational decision support and training.</li>
+                <li><strong>Advisory Evacuation Routes:</strong> Evacuation paths computed via OSRM or geodesic interpolation do not confirm real-time road flooding or physical passability. Physical reconnaissance is mandatory.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Incident Detail & Quick Dispatch Modal -->
+  <div class="modal-overlay" id="modal-incident-detail">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-inc-title">Incident Details</h3>
+        <button class="modal-close" id="modal-inc-close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-inc-body">
+        <!-- Injected dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="modal-inc-btn-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts: Vendor local fallbacks + modular application JS -->
+  <script src="/vendor/leaflet.js"></script>
+  <script src="/vendor/chart.umd.min.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/map.js"></script>
+  <script src="/js/incidents.js"></script>
+  <script src="/js/dispatch.js"></script>
+  <script src="/js/risk.js"></script>
+  <script src="/js/shelters.js"></script>
+  <script src="/js/alerts.js"></script>
+  <script src="/js/analytics.js"></script>
+  <script src="/js/health.js"></script>
+</body>
+</html>

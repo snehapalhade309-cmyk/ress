@@ -1,0 +1,228 @@
+/* ==========================================================================
+   RESQAI - Tactical Leaflet Map Stylesheet
+   Controls, Custom DivIcon Markers, Legend, Overlays
+   ========================================================================== */
+
+.map-page-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+#leaflet-map {
+  width: 100%;
+  height: 100%;
+  background: #090f1d;
+  z-index: 1;
+}
+
+/* Tactical Dark Cartographic Filter on OSM Tiles */
+.tactical-tiles {
+  filter: brightness(0.65) invert(1) contrast(1.5) hue-rotate(195deg) saturate(0.65);
+}
+
+/* Standard Dark Mode fallback */
+.leaflet-container {
+  font-family: var(--font-sans) !important;
+  background: #080d1a !important;
+}
+
+/* Map Overlays */
+.map-top-bar {
+  position: absolute;
+  top: 1rem;
+  left: 3.5rem;
+  z-index: 1000;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.map-search-box {
+  background: rgba(11, 19, 41, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.35rem 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 320px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.map-search-input {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 0.82rem;
+  width: 100%;
+  outline: none;
+}
+
+.map-layer-controls {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  background: rgba(11, 19, 41, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  font-size: 0.78rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.map-layer-controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-main);
+  cursor: pointer;
+  user-select: none;
+}
+
+.map-legend {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1rem;
+  z-index: 1000;
+  background: rgba(11, 19, 41, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  font-size: 0.72rem;
+}
+
+.legend-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  color: var(--text-main);
+}
+
+.legend-icon-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* Custom Marker Pins */
+.custom-marker-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fff;
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease;
+}
+
+.custom-marker-pin:hover {
+  transform: scale(1.2);
+}
+
+.marker-critical {
+  background: var(--sev-critical);
+  box-shadow: 0 0 16px var(--sev-critical-glow);
+  animation: marker-pulse-red 2s infinite;
+}
+
+.marker-high {
+  background: var(--sev-high);
+  box-shadow: 0 0 12px var(--sev-high-glow);
+}
+
+.marker-medium {
+  background: var(--sev-medium);
+  box-shadow: 0 0 10px var(--sev-medium-glow);
+}
+
+.marker-low {
+  background: var(--sev-low);
+  box-shadow: 0 0 8px var(--sev-low-glow);
+}
+
+.marker-resource {
+  background: #0284c7;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px var(--accent-cyan-glow);
+}
+
+.marker-resource.dispatched {
+  background: var(--sev-high);
+  border-color: #fff;
+}
+
+.marker-shelter {
+  background: #10b981;
+  border-color: #a7f3d0;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+@keyframes marker-pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Custom Leaflet Popups */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-highlight) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6) !important;
+  font-family: var(--font-sans) !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-card) !important;
+}
+
+.popup-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.35rem;
+}
+
+.popup-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.popup-btn {
+  display: inline-block;
+  background: var(--accent-blue);
+  color: #fff;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  cursor: pointer;
+}
